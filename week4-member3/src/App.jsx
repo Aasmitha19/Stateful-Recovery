@@ -84,6 +84,25 @@ const initialEdges = [
   },
 ]
 
+const initialNodeMetrics = {
+  source: {
+    eventsProcessed: 0,
+    processingLag: 0,
+  },
+  processor: {
+    eventsProcessed: 0,
+    processingLag: 0,
+  },
+  metrics: {
+    eventsProcessed: 0,
+    processingLag: 0,
+  },
+  dashboard: {
+    eventsProcessed: 0,
+    processingLag: 0,
+  },
+}
+
 function parsePrometheusMetrics(text) {
   const metrics = {}
 
@@ -115,6 +134,7 @@ function formatMetricValue(value) {
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
+  const [nodeMetrics, setNodeMetrics] = useState(initialNodeMetrics)
 
   const [eventsProcessed, setEventsProcessed] = useState(null)
   const [processingLag, setProcessingLag] = useState(null)
@@ -134,8 +154,26 @@ function App() {
         const text = await response.text()
         const metrics = parsePrometheusMetrics(text)
 
-        setEventsProcessed(metrics.events_processed_total ?? null)
-        setProcessingLag(metrics.processing_lag ?? null)
+        const processed = metrics.events_processed_total ?? null
+        const lag = metrics.processing_lag ?? null
+
+        setEventsProcessed(processed)
+        setProcessingLag(lag)
+
+        setNodeMetrics((currentMetrics) => ({
+          ...currentMetrics,
+          processor: {
+            ...currentMetrics.processor,
+            eventsProcessed: processed ?? currentMetrics.processor.eventsProcessed,
+            processingLag: lag ?? currentMetrics.processor.processingLag,
+          },
+          metrics: {
+            ...currentMetrics.metrics,
+            eventsProcessed: processed ?? currentMetrics.metrics.eventsProcessed,
+            processingLag: lag ?? currentMetrics.metrics.processingLag,
+          },
+        }))
+
         setMetricsError(false)
       } catch (error) {
         console.error('Metrics fetch failed:', error)
@@ -182,8 +220,8 @@ function App() {
         </div>
 
         <div className="metric-card">
-          <span>Bottleneck</span>
-          <strong>Waiting for node metrics</strong>
+          <span>Tracked Nodes</span>
+          <strong>{Object.keys(nodeMetrics).length}</strong>
         </div>
       </section>
 
