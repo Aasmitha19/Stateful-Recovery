@@ -130,7 +130,22 @@ function formatMetricValue(value) {
 
   return Number(value).toLocaleString()
 }
+function detectBottleneck(metrics) {
+  let bottleneckNode = null
+  let highestLag = -1
 
+  Object.entries(metrics).forEach(([nodeId, nodeMetric]) => {
+    if (nodeMetric.processingLag > highestLag) {
+      highestLag = nodeMetric.processingLag
+      bottleneckNode = nodeId
+    }
+  })
+
+  return {
+    nodeId: bottleneckNode,
+    processingLag: highestLag,
+  }
+}
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
