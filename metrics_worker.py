@@ -8,21 +8,30 @@ events_processed = Counter(
 
 processing_lag = Gauge(
     "processing_lag",
-    "Current processing lag"
+    "Current processing lag in seconds"
 )
+
 worker_running = Gauge(
     "worker_running",
     "Whether the metrics worker is running"
 )
+
 start_http_server(8000)
 
 worker_running.set(1)
 
 print("Prometheus metrics server started on port 8000")
 
+last_processed_time = time.time()
+
 while True:
+    current_time = time.time()
+
+    processing_lag.set(current_time - last_processed_time)
+
     events_processed.inc()
-    processing_lag.set(0)
+
+    last_processed_time = current_time
 
     print("Event processed")
     time.sleep(5)
