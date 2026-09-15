@@ -20,7 +20,10 @@ worker_running = Gauge(
     "worker_running",
     "Whether the metrics worker is running"
 )
-
+worker_start_time = Gauge(
+    "worker_start_time_seconds",
+    "Unix timestamp when the worker started"
+)
 processing_lag = Gauge(
     "processing_lag",
     "Current processing lag in seconds"
@@ -34,7 +37,7 @@ processing_time = Gauge(
 start_http_server(8000)
 
 worker_running.set(1)
-
+worker_start_time.set(time.time())
 print("Prometheus metrics server started on port 8000")
 
 last_processed_time = time.time()
