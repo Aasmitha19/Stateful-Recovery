@@ -19,6 +19,7 @@ const initialNodes = [
           <div>Streaming input</div>
         </div>
       ),
+      type: 'source',
     },
   },
   {
@@ -31,6 +32,7 @@ const initialNodes = [
           <div>Processing events</div>
         </div>
       ),
+      type: 'processor',
     },
   },
   {
@@ -43,6 +45,7 @@ const initialNodes = [
           <div>Events & lag</div>
         </div>
       ),
+      type: 'metrics',
     },
   },
   {
@@ -55,6 +58,7 @@ const initialNodes = [
           <div>Bottleneck detection</div>
         </div>
       ),
+      type: 'dashboard',
     },
   },
 ]
