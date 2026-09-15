@@ -5,7 +5,10 @@ events_processed = Counter(
     "events_processed_total",
     "Total number of events processed"
 )
-
+errors_total = Counter(
+    "worker_errors_total",
+    "Total number of worker processing errors"
+)
 processing_lag = Gauge(
     "processing_lag",
     "Current processing lag in seconds"
