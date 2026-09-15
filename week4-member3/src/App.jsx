@@ -15,12 +15,7 @@ const initialNodes = [
     id: 'source',
     position: { x: 50, y: 150 },
     data: {
-      label: (
-        <div>
-          <strong>Event Source</strong>
-          <div>Streaming input</div>
-        </div>
-      ),
+      label: 'Event Source',
       type: 'source',
     },
   },
@@ -28,12 +23,7 @@ const initialNodes = [
     id: 'processor',
     position: { x: 300, y: 150 },
     data: {
-      label: (
-        <div>
-          <strong>Stream Processor</strong>
-          <div>Processing events</div>
-        </div>
-      ),
+      label: 'Stream Processor',
       type: 'processor',
     },
   },
@@ -41,12 +31,7 @@ const initialNodes = [
     id: 'metrics',
     position: { x: 550, y: 150 },
     data: {
-      label: (
-        <div>
-          <strong>Prometheus Metrics</strong>
-          <div>Events & lag</div>
-        </div>
-      ),
+      label: 'Prometheus Metrics',
       type: 'metrics',
     },
   },
@@ -54,12 +39,7 @@ const initialNodes = [
     id: 'dashboard',
     position: { x: 800, y: 150 },
     data: {
-      label: (
-        <div>
-          <strong>Dashboard</strong>
-          <div>Bottleneck detection</div>
-        </div>
-      ),
+      label: 'Dashboard',
       type: 'dashboard',
     },
   },
@@ -158,6 +138,36 @@ function detectBottleneck(metrics) {
   }
 }
 
+function createNodeLabel(node, metric, bottleneck) {
+  const isBottleneck = bottleneck === node.id
+
+  return (
+    <div className="flow-node">
+      <div className="flow-node-title">
+        {node.data.label}
+      </div>
+
+      <div className="flow-node-type">
+        {node.data.type}
+      </div>
+
+      <div className="flow-node-status">
+        {isBottleneck ? '⚠ Bottleneck' : '✓ Healthy'}
+      </div>
+
+      <div className="flow-node-metrics">
+        <span>
+          Events: {formatMetricValue(metric.eventsProcessed)}
+        </span>
+
+        <span>
+          Lag: {metric.processingLag} s
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
@@ -239,25 +249,37 @@ function App() {
     return () => clearInterval(interval)
   }, [])
 
-  const displayNodes = nodes.map((node) => ({
-    ...node,
+  const displayNodes = nodes.map((node) => {
+    const metric = nodeMetrics[node.id]
+    const isBottleneck = node.id === bottleneckNode
 
-    style: {
-      border:
-        node.id === bottleneckNode
+    return {
+      ...node,
+
+      data: {
+        ...node.data,
+        label: createNodeLabel(
+          node,
+          metric,
+          bottleneckNode
+        ),
+      },
+
+      style: {
+        border: isBottleneck
           ? '3px solid red'
           : '1px solid #d1d5db',
 
-      background:
-        node.id === bottleneckNode
+        background: isBottleneck
           ? '#fff1f2'
           : 'white',
 
-      borderRadius: '10px',
-      padding: '10px',
-      minWidth: '150px',
-    },
-  }))
+        borderRadius: '10px',
+        padding: '10px',
+        minWidth: '190px',
+      },
+    }
+  })
 
   return (
     <div className="dashboard">
@@ -339,8 +361,9 @@ function App() {
 
       {metricsError && (
         <div className="metrics-warning">
-          Prometheus metrics are currently unavailable. Make sure the
-          Member 1 metrics worker is running on port 8000.
+          Prometheus metrics are currently unavailable.
+          Make sure the Member 1 metrics worker is running
+          on port 8000.
         </div>
       )}
 
@@ -355,6 +378,16 @@ function App() {
           <MiniMap />
         </ReactFlow>
       </section>
+
+      <div className="dag-legend">
+        <span>
+          ✓ Healthy = normal processing
+        </span>
+
+        <span>
+          ⚠ Bottleneck = highest processing lag
+        </span>
+      </div>
     </div>
   )
 }
