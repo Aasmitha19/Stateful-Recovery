@@ -9,10 +9,11 @@ errors_total = Counter(
     "worker_errors_total",
     "Total number of worker processing errors"
 )
-processing_lag = Gauge(
-    "processing_lag",
-    "Current processing lag in seconds"
+successful_events = Counter(
+    "successful_events_total",
+    "Total number of successfully processed events"
 )
+
 
 worker_running = Gauge(
     "worker_running",
@@ -31,10 +32,11 @@ while True:
     current_time = time.time()
 
     processing_lag.set(current_time - last_processed_time)
+    
 
     events_processed.inc()
+    successful_events.inc()
 
     last_processed_time = current_time
 
     print("Event processed")
-    time.sleep(5)
