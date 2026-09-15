@@ -5,19 +5,30 @@ events_processed = Counter(
     "events_processed_total",
     "Total number of events processed"
 )
+
 errors_total = Counter(
     "worker_errors_total",
     "Total number of worker processing errors"
 )
+
 successful_events = Counter(
     "successful_events_total",
     "Total number of successfully processed events"
 )
 
-
 worker_running = Gauge(
     "worker_running",
     "Whether the metrics worker is running"
+)
+
+processing_lag = Gauge(
+    "processing_lag",
+    "Current processing lag in seconds"
+)
+
+processing_time = Gauge(
+    "event_processing_time_seconds",
+    "Time taken to process the latest event"
 )
 
 start_http_server(8000)
@@ -32,11 +43,21 @@ while True:
     current_time = time.time()
 
     processing_lag.set(current_time - last_processed_time)
-    
 
-    events_processed.inc()
-    successful_events.inc()
+    processing_start = time.time()
 
-    last_processed_time = current_time
+    try:
+        events_processed.inc()
+        successful_events.inc()
 
-    print("Event processed")
+        processing_time.set(time.time() - processing_start)
+
+        last_processed_time = current_time
+
+        print("Event processed")
+
+    except Exception as error:
+        errors_total.inc()
+        print(f"Worker error: {error}")
+
+    time.sleep(5)
