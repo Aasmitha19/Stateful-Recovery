@@ -161,9 +161,11 @@ function App() {
       <section className="metrics-summary">
         <div className="metric-card">
           <span>Events Processed</span>
-          <strong>
-            {eventsProcessed !== null ? eventsProcessed : '--'}
-          </strong>
+         <strong>
+  {eventsProcessed !== null
+    ? eventsProcessed.toLocaleString()
+    : '--'}
+</strong>
         </div>
 
         <div className="metric-card">
