@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
 } from '@xyflow/react'
+
 import '@xyflow/react/dist/style.css'
 import './App.css'
 
@@ -130,9 +132,10 @@ function formatMetricValue(value) {
 
   return Number(value).toLocaleString()
 }
+
 function detectBottleneck(metrics) {
   let bottleneckNode = null
-  let highestLag = -1
+  let highestLag = 0
 
   Object.entries(metrics).forEach(([nodeId, nodeMetric]) => {
     if (nodeMetric.processingLag > highestLag) {
@@ -146,6 +149,7 @@ function detectBottleneck(metrics) {
     processingLag: highestLag,
   }
 }
+
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
@@ -154,6 +158,7 @@ function App() {
   const [eventsProcessed, setEventsProcessed] = useState(null)
   const [processingLag, setProcessingLag] = useState(null)
   const [metricsError, setMetricsError] = useState(false)
+  const [metricsLoading, setMetricsLoading] = useState(true)
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -175,40 +180,38 @@ function App() {
         setEventsProcessed(processed)
         setProcessingLag(lag)
 
-        setNodeMetrics((currentMetrics) => ({
-          ...currentMetrics,
-          processor: {
-            ...currentMetrics.processor,
-            eventsProcessed: processed ?? currentMetrics.processor.eventsProcessed,
-            processingLag: lag ?? currentMetrics.processor.processingLag,
-          },
-          metrics: {
-            ...currentMetrics.metrics,
-            eventsProcessed: processed ?? currentMetrics.metrics.eventsProcessed,
-            processingLag: lag ?? currentMetrics.metrics.processingLag,
-          },
-        }))
-const updatedNodeMetrics = {
-  ...nodeMetrics,
-  processor: {
-    ...nodeMetrics.processor,
-    eventsProcessed: processed ?? nodeMetrics.processor.eventsProcessed,
-    processingLag: lag ?? nodeMetrics.processor.processingLag,
-  },
-  metrics: {
-    ...nodeMetrics.metrics,
-    eventsProcessed: processed ?? nodeMetrics.metrics.eventsProcessed,
-    processingLag: lag ?? nodeMetrics.metrics.processingLag,
-  },
-}
+        setNodeMetrics((currentMetrics) => {
+          const updatedMetrics = {
+            ...currentMetrics,
+            processor: {
+              ...currentMetrics.processor,
+              eventsProcessed:
+                processed ?? currentMetrics.processor.eventsProcessed,
+              processingLag:
+                lag ?? currentMetrics.processor.processingLag,
+            },
+            metrics: {
+              ...currentMetrics.metrics,
+              eventsProcessed:
+                processed ?? currentMetrics.metrics.eventsProcessed,
+              processingLag:
+                lag ?? currentMetrics.metrics.processingLag,
+            },
+          }
 
-const detectedBottleneck = detectBottleneck(updatedNodeMetrics)
+          const detectedBottleneck = detectBottleneck(updatedMetrics)
 
-setBottleneckNode(detectedBottleneck.nodeId)
+          setBottleneckNode(detectedBottleneck.nodeId)
+
+          return updatedMetrics
+        })
+
         setMetricsError(false)
+        setMetricsLoading(false)
       } catch (error) {
         console.error('Metrics fetch failed:', error)
         setMetricsError(true)
+        setMetricsLoading(false)
       }
     }
 
@@ -231,7 +234,11 @@ setBottleneckNode(detectedBottleneck.nodeId)
 
         <div className="status">
           <span className="status-dot"></span>
-          {metricsError ? 'Metrics Offline' : 'Monitoring'}
+          {metricsLoading
+            ? 'Loading Metrics'
+            : metricsError
+              ? 'Metrics Offline'
+              : 'Monitoring'}
         </div>
       </header>
 
@@ -239,14 +246,20 @@ setBottleneckNode(detectedBottleneck.nodeId)
         <div className="metric-card">
           <span>Events Processed</span>
           <strong>
-            {formatMetricValue(eventsProcessed)}
+            {metricsLoading
+              ? 'Loading...'
+              : formatMetricValue(eventsProcessed)}
           </strong>
         </div>
 
         <div className="metric-card">
           <span>Processing Lag</span>
           <strong>
-            {processingLag !== null ? `${processingLag} seconds` : '--'}
+            {metricsLoading
+              ? 'Loading...'
+              : processingLag !== null
+                ? `${processingLag} seconds`
+                : '--'}
           </strong>
         </div>
 
@@ -254,20 +267,37 @@ setBottleneckNode(detectedBottleneck.nodeId)
           <span>Tracked Nodes</span>
           <strong>{Object.keys(nodeMetrics).length}</strong>
         </div>
+
+        <div className="metric-card">
+          <span>Bottleneck</span>
+          <strong>
+            {metricsLoading
+              ? 'Loading...'
+              : bottleneckNode
+                ? bottleneckNode
+                : 'None detected'}
+          </strong>
+        </div>
       </section>
 
       <section className="dag-container">
-     <ReactFlow
-  nodes={nodes.map((node) => ({
-    ...node,
-    style: {
-      border: node.id === bottleneckNode ? '3px solid red' : undefined,
-      background: node.id === bottleneckNode ? '#fff1f2' : undefined,
-    },
-  }))}
-  edges={edges}
-  fitView
->
+        <ReactFlow
+          nodes={nodes.map((node) => ({
+            ...node,
+            style: {
+              border:
+                node.id === bottleneckNode
+                  ? '3px solid red'
+                  : undefined,
+              background:
+                node.id === bottleneckNode
+                  ? '#fff1f2'
+                  : undefined,
+            },
+          }))}
+          edges={edges}
+          fitView
+        >
           <Background />
           <Controls />
           <MiniMap />
