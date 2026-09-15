@@ -133,6 +133,14 @@ function formatMetricValue(value) {
   return Number(value).toLocaleString()
 }
 
+function formatUpdateTime(value) {
+  if (!value) {
+    return '--'
+  }
+
+  return new Date(value).toLocaleTimeString()
+}
+
 function detectBottleneck(metrics) {
   let bottleneckNode = null
   let highestLag = 0
@@ -153,12 +161,17 @@ function detectBottleneck(metrics) {
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
+
   const [nodeMetrics, setNodeMetrics] = useState(initialNodeMetrics)
   const [bottleneckNode, setBottleneckNode] = useState(null)
+
   const [eventsProcessed, setEventsProcessed] = useState(null)
   const [processingLag, setProcessingLag] = useState(null)
+
   const [metricsError, setMetricsError] = useState(false)
   const [metricsLoading, setMetricsLoading] = useState(true)
+
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -168,7 +181,7 @@ function App() {
         })
 
         if (!response.ok) {
-          throw new Error('Failed to fetch metrics')
+          throw new Error('Failed to fetch Prometheus metrics')
         }
 
         const text = await response.text()
@@ -183,6 +196,7 @@ function App() {
         setNodeMetrics((currentMetrics) => {
           const updatedMetrics = {
             ...currentMetrics,
+
             processor: {
               ...currentMetrics.processor,
               eventsProcessed:
@@ -190,6 +204,7 @@ function App() {
               processingLag:
                 lag ?? currentMetrics.processor.processingLag,
             },
+
             metrics: {
               ...currentMetrics.metrics,
               eventsProcessed:
@@ -208,8 +223,10 @@ function App() {
 
         setMetricsError(false)
         setMetricsLoading(false)
+        setLastUpdated(new Date())
       } catch (error) {
         console.error('Metrics fetch failed:', error)
+
         setMetricsError(true)
         setMetricsLoading(false)
       }
@@ -222,18 +239,44 @@ function App() {
     return () => clearInterval(interval)
   }, [])
 
+  const displayNodes = nodes.map((node) => ({
+    ...node,
+
+    style: {
+      border:
+        node.id === bottleneckNode
+          ? '3px solid red'
+          : '1px solid #d1d5db',
+
+      background:
+        node.id === bottleneckNode
+          ? '#fff1f2'
+          : 'white',
+
+      borderRadius: '10px',
+      padding: '10px',
+      minWidth: '150px',
+    },
+  }))
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
         <div>
           <h1>Streaming DAG Monitor</h1>
+
           <p>
             Prometheus-powered monitoring for the Stateful Recovery pipeline
           </p>
         </div>
 
         <div className="status">
-          <span className="status-dot"></span>
+          <span
+            className={`status-dot ${
+              metricsError ? 'status-dot-error' : ''
+            }`}
+          ></span>
+
           {metricsLoading
             ? 'Loading Metrics'
             : metricsError
@@ -245,6 +288,7 @@ function App() {
       <section className="metrics-summary">
         <div className="metric-card">
           <span>Events Processed</span>
+
           <strong>
             {metricsLoading
               ? 'Loading...'
@@ -254,6 +298,7 @@ function App() {
 
         <div className="metric-card">
           <span>Processing Lag</span>
+
           <strong>
             {metricsLoading
               ? 'Loading...'
@@ -265,11 +310,15 @@ function App() {
 
         <div className="metric-card">
           <span>Tracked Nodes</span>
-          <strong>{Object.keys(nodeMetrics).length}</strong>
+
+          <strong>
+            {Object.keys(nodeMetrics).length}
+          </strong>
         </div>
 
         <div className="metric-card">
           <span>Bottleneck</span>
+
           <strong>
             {metricsLoading
               ? 'Loading...'
@@ -278,23 +327,26 @@ function App() {
                 : 'None detected'}
           </strong>
         </div>
+
+        <div className="metric-card">
+          <span>Last Metrics Update</span>
+
+          <strong>
+            {formatUpdateTime(lastUpdated)}
+          </strong>
+        </div>
       </section>
+
+      {metricsError && (
+        <div className="metrics-warning">
+          Prometheus metrics are currently unavailable. Make sure the
+          Member 1 metrics worker is running on port 8000.
+        </div>
+      )}
 
       <section className="dag-container">
         <ReactFlow
-          nodes={nodes.map((node) => ({
-            ...node,
-            style: {
-              border:
-                node.id === bottleneckNode
-                  ? '3px solid red'
-                  : undefined,
-              background:
-                node.id === bottleneckNode
-                  ? '#fff1f2'
-                  : undefined,
-            },
-          }))}
+          nodes={displayNodes}
           edges={edges}
           fitView
         >
