@@ -1,0 +1,26 @@
+[
+    {
+        "truck_id": "TRUCK-001",
+        "temperature": 25,
+        "timestamp": "2026-09-13T10:00:00",
+        "status": "valid"
+    },
+    {
+        "truck_id": "TRUCK-001",
+        "temperature": 27,
+        "timestamp": "2026-09-13T10:01:00",
+        "status": "valid"
+    },
+    {
+        "truck_id": "TRUCK-002",
+        "temperature": 32,
+        "timestamp": "2026-09-13T10:03:00",
+        "status": "valid"
+    },
+    {
+        "truck_id": "TRUCK-001",
+        "temperature": 28,
+        "timestamp": "2026-09-13T10:05:00",
+        "status": "valid"
+    }
+]
