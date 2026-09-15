@@ -150,7 +150,7 @@ function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
   const [nodeMetrics, setNodeMetrics] = useState(initialNodeMetrics)
-
+  const [bottleneckNode, setBottleneckNode] = useState(null)
   const [eventsProcessed, setEventsProcessed] = useState(null)
   const [processingLag, setProcessingLag] = useState(null)
   const [metricsError, setMetricsError] = useState(false)
@@ -188,7 +188,23 @@ function App() {
             processingLag: lag ?? currentMetrics.metrics.processingLag,
           },
         }))
+const updatedNodeMetrics = {
+  ...nodeMetrics,
+  processor: {
+    ...nodeMetrics.processor,
+    eventsProcessed: processed ?? nodeMetrics.processor.eventsProcessed,
+    processingLag: lag ?? nodeMetrics.processor.processingLag,
+  },
+  metrics: {
+    ...nodeMetrics.metrics,
+    eventsProcessed: processed ?? nodeMetrics.metrics.eventsProcessed,
+    processingLag: lag ?? nodeMetrics.metrics.processingLag,
+  },
+}
 
+const detectedBottleneck = detectBottleneck(updatedNodeMetrics)
+
+setBottleneckNode(detectedBottleneck.nodeId)
         setMetricsError(false)
       } catch (error) {
         console.error('Metrics fetch failed:', error)
@@ -241,11 +257,17 @@ function App() {
       </section>
 
       <section className="dag-container">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          fitView
-        >
+     <ReactFlow
+  nodes={nodes.map((node) => ({
+    ...node,
+    style: {
+      border: node.id === bottleneckNode ? '3px solid red' : undefined,
+      background: node.id === bottleneckNode ? '#fff1f2' : undefined,
+    },
+  }))}
+  edges={edges}
+  fitView
+>
           <Background />
           <Controls />
           <MiniMap />
