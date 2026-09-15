@@ -24,6 +24,10 @@ worker_start_time = Gauge(
     "worker_start_time_seconds",
     "Unix timestamp when the worker started"
 )
+worker_uptime = Gauge(
+    "worker_uptime_seconds",
+    "Worker uptime in seconds"
+)
 processing_lag = Gauge(
     "processing_lag",
     "Current processing lag in seconds"
@@ -44,7 +48,7 @@ last_processed_time = time.time()
 
 while True:
     current_time = time.time()
-
+    worker_uptime.set(current_time - worker_start_time._value.get())
     processing_lag.set(current_time - last_processed_time)
 
     processing_start = time.time()
