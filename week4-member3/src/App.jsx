@@ -104,6 +104,14 @@ function parsePrometheusMetrics(text) {
   return metrics
 }
 
+function formatMetricValue(value) {
+  if (value === null || value === undefined) {
+    return '--'
+  }
+
+  return Number(value).toLocaleString()
+}
+
 function App() {
   const [nodes] = useState(initialNodes)
   const [edges] = useState(initialEdges)
@@ -161,18 +169,16 @@ function App() {
       <section className="metrics-summary">
         <div className="metric-card">
           <span>Events Processed</span>
-         <strong>
-  {eventsProcessed !== null
-    ? eventsProcessed.toLocaleString()
-    : '--'}
-</strong>
+          <strong>
+            {formatMetricValue(eventsProcessed)}
+          </strong>
         </div>
 
         <div className="metric-card">
           <span>Processing Lag</span>
-<strong>
-  {processingLag !== null ? `${processingLag} seconds` : '--'}
-</strong>
+          <strong>
+            {processingLag !== null ? `${processingLag} seconds` : '--'}
+          </strong>
         </div>
 
         <div className="metric-card">
