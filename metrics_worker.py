@@ -10,8 +10,13 @@ processing_lag = Gauge(
     "processing_lag",
     "Current processing lag"
 )
-
+worker_running = Gauge(
+    "worker_running",
+    "Whether the metrics worker is running"
+)
 start_http_server(8000)
+
+worker_running.set(1)
 
 print("Prometheus metrics server started on port 8000")
 
