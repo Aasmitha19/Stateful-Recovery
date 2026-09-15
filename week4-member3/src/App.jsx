@@ -170,9 +170,9 @@ function App() {
 
         <div className="metric-card">
           <span>Processing Lag</span>
-          <strong>
-            {processingLag !== null ? `${processingLag}` : '--'}
-          </strong>
+<strong>
+  {processingLag !== null ? `${processingLag} seconds` : '--'}
+</strong>
         </div>
 
         <div className="metric-card">
