@@ -27,5 +27,10 @@ class StateStore:
     def has_state(self, truck_id):
         return self.db.get(truck_id) is not None
 
+    def clear(self, truck_id):
+        if self.db.get(truck_id) is not None:
+            del self.db[truck_id]
+            self.db.flush()
+
     def close(self):
         self.db.close()
