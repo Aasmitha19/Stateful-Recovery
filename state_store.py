@@ -24,5 +24,8 @@ class StateStore:
 
         return json.loads(data)
 
+    def has_state(self, truck_id):
+        return self.db.get(truck_id) is not None
+
     def close(self):
         self.db.close()
