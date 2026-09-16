@@ -65,3 +65,5 @@ The tests verify:
 ## Project Goal
 
 The goal of this module is to provide reliable telemetry event validation as part of the Stateful Recovery system for real-time truck monitoring.
+
+<!-- Updated 16/09/2026 -->
